@@ -1,3 +1,4 @@
+'use strict';
 
 const slack = require('slack');
 const async = require('async');
@@ -58,8 +59,7 @@ class Output {
     }
 
     var attachment = {
-      fallback: type + 'post: ' + this.getSlackLink(post.title, link) +
-        ' by ' + this.getSlackLink(post.author.name, author_link),
+      fallback: post.domain + ': ' + post.title + ' by ' + post.author.name,
       title: post.title,
       title_link: link,
       author_name: 'u/' + post.author.name,

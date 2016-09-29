@@ -32,6 +32,10 @@ class Listener extends events.Events {
     this.listen();
   }
 
+  attach(output) {
+    output.attach(this);
+  }
+
   addSubreddits(subreddits) {
     for(var i in subreddits) {
       let latest = 0;

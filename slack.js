@@ -66,7 +66,7 @@ class Output {
       author_link: author_link,
       thumb_url: post.thumbnail,
       text: text,
-      ts: post.created,
+      ts: post.created_utc,
       footer: post.domain
     };
     

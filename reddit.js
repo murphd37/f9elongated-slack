@@ -13,9 +13,9 @@ class Listener extends events.Events {
 
   constructor(subreddits) {
     super();
-    
+
     this.r = new snoowrap({
-      userAgent: 'f9elongated version 0.0.1',
+      userAgent: 'f9elongated version 0.0.2',
       clientId: tokens.reddit.clientId,
       clientSecret: tokens.reddit.clientSecret,
       username: tokens.reddit.username,
@@ -90,6 +90,8 @@ class Listener extends events.Events {
     for(var i in this.subreddits) {
       this.r.getSubreddit(i).getNew().then((posts) => {
         this.checkNewPosts(i, posts);
+      }, (err) => {
+        console.log(err);
       });
     }
 

@@ -15,7 +15,7 @@ class Listener extends events.Events {
     super();
 
     this.r = new snoowrap({
-      userAgent: 'f9elongated version 0.0.2',
+      userAgent: 'r/SpaceX newposts slack bot (f9elongated) 0.0.2 (by u/zlsa)',
       clientId: tokens.reddit.clientId,
       clientSecret: tokens.reddit.clientSecret,
       username: tokens.reddit.username,
@@ -95,7 +95,7 @@ class Listener extends events.Events {
       });
     }
 
-    setTimeout(() => { this.listen() }, 1000);
+    setTimeout(() => { this.listen() }, 5000);
     
   }
 

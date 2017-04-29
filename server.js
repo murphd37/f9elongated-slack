@@ -1,3 +1,4 @@
+'use strict';
 
 const reddit = require('./reddit.js');
 const slack = require('./slack.js');

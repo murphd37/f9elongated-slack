@@ -3,58 +3,82 @@
 const events = require('./events.js');
 const snoowrap = require('snoowrap');
 
-const tokens = require('./tokens.json');
-
 const cache = require('./cache.json');
 
 const fs = require('fs');
 
 class Listener extends events.Events {
 
-  constructor(subreddits) {
+  constructor(tokens, targets) {
     super();
 
     this.r = new snoowrap({
-      userAgent: 'r/SpaceX newposts slack bot (f9elongated) 0.0.2 (by u/zlsa)',
-      clientId: tokens.reddit.clientId,
-      clientSecret: tokens.reddit.clientSecret,
-      username: tokens.reddit.username,
-      password: tokens.reddit.password
+      userAgent: 'r/SpaceX newposts slack bot (f9elongated) 0.0.3 (by u/zlsa)',
+      
+      clientId: tokens.clientId,
+      clientSecret: tokens.clientSecret,
+      
+      username: tokens.username,
+      password: tokens.password
     });
 
     this.r.config({
+      debug: false,
       requestDelay: 5000
     });
 
-    this.subreddits = {};
+    this.targets = {};
 
-    this.addSubreddits(subreddits);
+    this.interval = 5000;
 
-    this.listen();
+    this.addTargets(targets);
   }
 
   attach(output) {
     output.attach(this);
   }
 
-  addSubreddits(subreddits) {
-    for(var i in subreddits) {
-      let latest = 0;
-      
-      if(subreddits[i] in cache) {
-        latest = cache[subreddits[i]].latest;
+  addTargets(targets) {
+    
+    for(var target_name in targets) {
+      let latest = {
+        'posts': 0,
+        'modqueue': 0
+      };
+
+      if(target_name in cache) {
+        latest = cache[target_name];
+      }
+
+      let target = targets[target_name];
+      target.name = target_name;
+
+      if(!('important' in target)) {
+        target.important = false;
       }
       
-      this.subreddits[subreddits[i]] = {latest: latest};
+      if(!('poll' in target)) {
+        target.poll = 'posts';
+      }
+      
+      if(!('color' in target)) {
+        target.color = '#cccccc';
+      }
+      
+      this.targets[target_name] = target;
+
+      this.targets[target_name].latest = latest;
     }
+    
   }
 
-  checkNewPosts(subreddit, posts) {
+  // Given an 'r/subreddit' and a list of posts, determine if there are any new posts
+  checkNewPosts(subreddit_name, posts, method) {
 
-    posts = posts.slice(0, 5);
+    posts = posts.slice(0, 10);
 
-    let s = this.subreddits[subreddit];
-    let latest = s.latest;
+    let subreddit = this.targets[subreddit_name];
+    let latest = subreddit.latest[method];
 
     if(latest != 0) {
       
@@ -63,11 +87,13 @@ class Listener extends events.Events {
 
         if(p.created > latest) {
           this.fire('new-post', {
-            subreddit: subreddit,
+            method: method,
+            target: subreddit,
             latest: latest,
             post: p
           });
         }
+        
       }
       
     }
@@ -76,27 +102,77 @@ class Listener extends events.Events {
       latest = Math.max(posts[i].created, latest);
     }
 
-    this.subreddits[subreddit].latest = latest;
+    this.targets[subreddit_name].latest[method] = latest;
 
     this.cache();
   }
 
   cache() {
-    fs.writeFileSync('cache.json', JSON.stringify(this.subreddits));
+    let latest = {};
+    
+    for(let i in this.targets) {
+      latest[i] = this.targets[i].latest;
+    }
+    
+    fs.writeFileSync('cache.json', JSON.stringify(latest));
   }
 
-  listen() {
+  pollTarget(target_name) {
     
-    for(var i in this.subreddits) {
-      this.r.getSubreddit(i).getNew().then((posts) => {
-        this.checkNewPosts(i, posts);
+    if(target_name.startsWith('r/')) {
+      this.pollSubreddit(target_name);
+    } else {
+      console.warn('cannot poll users yet');
+    }
+    
+  }
+
+  pollSubreddit(subreddit_name) {
+
+    let config = this.targets[subreddit_name];
+
+    if(config.ignore) return;
+
+    if(config.poll == 'posts' || config.poll == 'both') {
+      
+      this.r.getSubreddit(subreddit_name.replace('r/', '')).getNew().then((posts) => {
+        this.checkNewPosts(subreddit_name, posts, 'posts');
       }, (err) => {
-        console.log(err);
+        console.error(err);
       });
+
     }
 
-    setTimeout(() => { this.listen() }, 5000);
+    if(config.poll == 'modqueue' || config.poll == 'both') {
+      
+      this.r.getSubreddit(subreddit_name.replace('r/', '')).getModqueue({ only: 'links' }).then((posts) => {
+        this.checkNewPosts(subreddit_name, posts, 'modqueue');
+      }, (err) => {
+        console.error(err);
+      });
+
+    }
     
+  }
+
+  poll() {
+
+    for(let target_name in this.targets) {
+      this.pollTarget(target_name);
+    }
+
+    setTimeout(() => { this.poll(); }, this.interval);
+  }
+
+  begin() {
+    console.log('listening to ' + Object.keys(this.targets).length + ' targets');
+    
+    this.on('new-post', (data) => {
+      console.log(JSON.stringify(data.post));
+      //console.log(data.target.name + ': ' +  data.post.title);
+    });
+    
+    this.poll();
   }
 
 }

@@ -19,7 +19,11 @@ Under the top Slack menu, choose "Administration", then "Manage apps".
 Under "Custom Integrations", create a new integration.
 Set the bot name, and then retrieve the API Token for the `slack[SpaceX Mods].token` field in `tokens.json`.
 
-## Future Development
+# Run
+
+`npm run start`
+
+# Future Development
 
 From the creator, u/zlsa:
 

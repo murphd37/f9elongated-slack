@@ -1,0 +1,16 @@
+{
+    "reddit": {
+        "clientId": "<your-app-client-id>",
+        "clientSecret": "<your-app-client-secret>",
+        "username": "<your-reddit-username: you need to be a mod of the subreddit>",
+        "password": "<your-reddit-password>"
+    },
+    "slack": {
+        "SpaceX Mods": {
+            "channel": "#newposts",
+            "token": "xoxb-digits-for-the-channel",
+            "quiet": false,
+            "method": "both"
+        }
+    }
+}

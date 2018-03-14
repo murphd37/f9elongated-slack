@@ -11,7 +11,8 @@ const listener = new reddit.Listener(
             poll: 'both',
             color: '#2266ff',
             important: true
-        },
+        }
+        /*,
         'r/spacexlounge': {
             poll: 'posts',
             color: '#ccaaff',
@@ -21,7 +22,7 @@ const listener = new reddit.Listener(
             poll: 'posts',
             color: '#dddddd',
             important: false
-        }
+        }*/
     });
 
 for (let team_name in tokens.slack) {
